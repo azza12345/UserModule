@@ -12,7 +12,7 @@ namespace Data
         public string Name { get; set; }
         public string Description { get; set; }
 
-        public ICollection<ApplicationUser>? Users { get; set; }
+        public ICollection<User>? Users { get; set; }
         public ICollection<Group>? Groups { get; set; }
       
         public ICollection<View>? Views { get; set; }

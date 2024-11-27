@@ -9,12 +9,15 @@ namespace Core.IRepositories
 {
     public interface IApplicationUserRepository
     {
-        Task<ApplicationUser> FindByEmailAsynch (string email);
+        Task<User> FindByEmailAsynch (string email);
         
-        Task<bool> RegisterUserAsynch (ApplicationUser user , string password);
-        Task<bool> CheckPasswordAsynch (ApplicationUser user , string password);
-        Task<bool> SignInUserAsync(ApplicationUser user, string password);
-      Task SignOutAsync();
+        Task<bool> RegisterUserAsynch (User user , string password);
+        Task<bool> CheckPasswordAsynch (User user , string password);
+        Task<bool> SignInUserAsync(User user, string password);
+        Task SignOutAsync();
+        Task<List<User>> GetAllUsersAsync();
+        Task<List<User>> GetAllUsersBySystemIdAsync(Guid systemId);
+
     }
 }
 

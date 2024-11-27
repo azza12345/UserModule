@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Data
 {
     [Table("ApplicationUser")]
-    public class ApplicationUser : IdentityUser<Guid>
+    public class User : IdentityUser<Guid>
     {
         public string Fname { get; set; }
         public string Lname { get; set; }

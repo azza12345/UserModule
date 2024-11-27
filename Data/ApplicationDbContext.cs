@@ -3,20 +3,21 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
+using Action = Data.Action;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
        : base(options)
     {
     }
 
-    public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+    public DbSet<User> Users { get; set; }
     public DbSet<Group> Groups { get; set; }
     public DbSet<UserGroup> UserGroups { get; set; }
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<SystemModule> Systems { get; set; }
-  //  public DbSet<View> Views { get; set; }
+    public DbSet<View> Views { get; set; }
     public DbSet<Data.Action> Actions { get; set; }
     public DbSet<GroupPermission> GroupPermissions { get; set; }
 
@@ -24,14 +25,103 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     {
         base.OnModelCreating(builder);
 
+        var systemId = Guid.NewGuid();
+        builder.Entity<SystemModule>().HasData(
+            new SystemModule
+            {
+                Id = systemId,
+                Name = "Default System",
+                Description = " default system "
+            }
+        );
+
+
+        var userId = Guid.NewGuid();
+        builder.Entity<User>().HasData(
+            new User
+            {
+                Id = userId,
+                Fname = "Azza",
+                Lname = "Mohamed",
+                PasswordHash="Azza123#",
+                Email = "azzaAdmin@gmail.com",
+                Mobile = "1234567890",
+                Address = "6Th October",
+              //  IsEmailVerified = true,
+              //  IsActive = true,
+                SystemId = systemId 
+            }
+            );
+
+        var groupId = Guid.NewGuid();
+        builder.Entity<Group>().HasData(
+            new Group
+            {
+                Id = groupId,
+                Name = "Meters",
+                Description = "Meters System ",
+                IsActive = true,
+                SystemId = systemId,
+                ParentGroupId = null 
+            }
+        );
+
+        var actionId = Guid.NewGuid();
+        builder.Entity<Action>().HasData(
+            new Action
+            {
+                Id = actionId,
+                Name = "Create User",
+                Description = "Allow User creating new users",
+                SystemId = systemId
+            }
+        );
+
+
+        var viewId = Guid.NewGuid();
+        builder.Entity<View>().HasData(
+            new View
+            {
+                Id = viewId,
+                Name = "Admin Dashboard",
+                Description="admin dashboard",
+                SystemId = systemId
+            }
+        );
+
+
+        var permissionId = Guid.NewGuid();
+        builder.Entity<Permission>().HasData(
+            new Permission
+            {
+                Id = permissionId,
+               
+                ActionId = actionId, 
+                ViewId = viewId
+            }
+        );
+
         
+        builder.Entity<GroupPermission>().HasData(
+            new GroupPermission
+            {
+                GroupId = groupId, 
+                PermissionId = permissionId 
+            }
+        );
+
+        
+        
+
+
+
         builder.Entity<UserGroup>()
             .HasKey(ug => new { ug.UserId, ug.GroupId });
 
         
-        builder.Entity<ApplicationUser>(entity =>
+        builder.Entity<User>(entity =>
         {
-            entity.ToTable("ApplicationUser");
+            entity.ToTable("User");
 
             builder.Entity<UserGroup>()
                 .HasOne(ug => ug.User)
@@ -98,14 +188,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
             .HasForeignKey(p => p.ActionId)
             .OnDelete(DeleteBehavior.Restrict); 
 
-        //builder.Entity<Permission>()
-        //    .HasOne(p => p.View)
-        //    .WithMany()
-        //    .HasForeignKey(p => p.ViewId)
-        //    .OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<Permission>()
+           .HasOne(p => p.View)
+           .WithMany()
+           .HasForeignKey(p => p.ViewId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+        
+
 
     }
-    }
+}
 
 
 

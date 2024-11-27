@@ -9,14 +9,14 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         
-             CreateMap<RegisterViewModel, ApplicationUser>()
+             CreateMap<RegisterViewModel, User>()
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email))
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
             .ForMember(dest => dest.Fname, opt => opt.MapFrom(src => src.Fname))
             .ForMember(dest => dest.Lname, opt => opt.MapFrom(src => src.Lname))
             .ForMember(dest => dest.Mobile, opt => opt.MapFrom(src => src.Mobile));
 
-            CreateMap<LoginViewModel, ApplicationUser>()
+            CreateMap<LoginViewModel, User>()
            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email))
            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
 

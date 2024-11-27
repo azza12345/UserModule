@@ -1,4 +1,5 @@
 ﻿using Core.ViewModels;
+using Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,12 @@ namespace Core.Interfaces
 {
     public interface IApplicationUserService
     {
-        Task<string> RegisterAsync(RegisterViewModel registerViewModel);
+        Task<ApiResponse> RegisterAsync(RegisterViewModel registerViewModel);
         Task<string> LoginAsync(LoginViewModel loginViewModel);
 
         Task LogoutAsync();
+        Task<List<User>> GetAllUsersAsync();
+        Task<List<User>> GetAllUsersBySystemIdAsync(Guid systemId);
     }
 }
 

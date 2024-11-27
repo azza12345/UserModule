@@ -1,4 +1,6 @@
 ﻿using Business;
+using Business.Services;
+using Core;
 using Core.Interfaces;
 using Core.Logging;
 
@@ -64,40 +66,78 @@ namespace WebApi.Controllers
             }
         }
 
-        /// <summary>
-        /// Registers a new user and generates a JWT token.
-        /// </summary>
-        /// <param name="registerViewModel">The registration information.</param>
-        /// <returns>An IActionResult containing the JWT token or an error message.</returns>
-        [HttpPost("Register")]
+        ///// <summary>
+        ///// Registers a new user and generates a JWT token.
+        ///// </summary>
+        ///// <param name="registerViewModel">The registration information.</param>
+        ///// <returns>An IActionResult containing the JWT token or an error message.</returns>
+        //[HttpPost("Register")]
+        //public async Task<IActionResult> Register([FromBody] RegisterViewModel registerViewModel)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        LoggerHelper.LogInfo("Invalid model state for registration: " + ModelState);
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    try
+        //    {
+        //        LoggerHelper.LogInfo("Registration attempt for user: " + registerViewModel?.Email);
+
+        //        var token = await _userService.RegisterAsync(registerViewModel);
+
+        //        if (token == "Registration failed")
+        //        {
+        //            LoggerHelper.LogInfo("Registration failed for user: " + registerViewModel?.Email);
+        //            return BadRequest(new { message = "Registration failed. Please check the provided information." });
+        //        }
+
+        //        LoggerHelper.LogInfo("Registration successful for user: " + registerViewModel?.Email);
+        //        return Ok(new { Token = token });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        LoggerHelper.LogError(new Exception("An error occurred during registration for user: " + registerViewModel?.Email, ex));
+        //        return StatusCode(500, new { message = "An error occurred while processing the registration request." });
+        //    }
+        //}
+
+
+        [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterViewModel registerViewModel)
         {
             if (!ModelState.IsValid)
             {
-                LoggerHelper.LogInfo("Invalid model state for registration: " + ModelState);
-                return BadRequest(ModelState);
-            }
-
-            try
-            {
-                LoggerHelper.LogInfo("Registration attempt for user: " + registerViewModel?.Email);
-
-                var token = await _userService.RegisterAsync(registerViewModel);
-
-                if (token == "Registration failed")
+                return BadRequest(new ApiResponse
                 {
-                    LoggerHelper.LogInfo("Registration failed for user: " + registerViewModel?.Email);
-                    return BadRequest(new { message = "Registration failed. Please check the provided information." });
-                }
+                    Success = false,
+                    Message = "Invalid data provided.",
+                    StatusCode = CustomStatusCode.BadRequest
+                });
+            }
 
-                LoggerHelper.LogInfo("Registration successful for user: " + registerViewModel?.Email);
-                return Ok(new { Token = token });
-            }
-            catch (Exception ex)
-            {
-                LoggerHelper.LogError(new Exception("An error occurred during registration for user: " + registerViewModel?.Email, ex));
-                return StatusCode(500, new { message = "An error occurred while processing the registration request." });
-            }
+            var response = await _userService.RegisterAsync(registerViewModel);
+
+            return StatusCode((int)response.StatusCode, response);
         }
+
+        [HttpGet("allUsers")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userService.GetAllUsersAsync();
+            return Ok(users);
+        }
+
+        [HttpGet("usersBySystem/{systemId}")]
+        public async Task<IActionResult> GetUsersBySystemId(Guid systemId)
+        {
+            var users = await _userService.GetAllUsersBySystemIdAsync(systemId);
+            if (users == null || !users.Any())
+            {
+                return NotFound($"No users found for SystemId: {systemId}");
+            }
+            return Ok(users);
+        }
+
     }
 }

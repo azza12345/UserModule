@@ -11,8 +11,8 @@ namespace Data
     {
         public Guid Id { get; set; }
      
-       // public Guid ViewId { get; set; }
-       // public View View { get; set; }
+        public Guid ViewId { get; set; }
+        public View View { get; set; }
         public Guid ActionId { get; set; }
         public Action Action { get; set; }
 

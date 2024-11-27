@@ -13,15 +13,15 @@ namespace Business.Repositories
     /// </summary>
     public class ApplicationUserRepository : IApplicationUserRepository
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApplicationUserRepository"/> class.
         /// </summary>
         /// <param name="userManager">The user manager dependency.</param>
         /// <param name="signInManager">The sign-in manager dependency.</param>
-        public ApplicationUserRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        public ApplicationUserRepository(UserManager<User> userManager, SignInManager<User> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -33,7 +33,7 @@ namespace Business.Repositories
         /// <param name="user">The user to validate.</param>
         /// <param name="password">The password to check.</param>
         /// <returns>True if the password is correct; otherwise, false.</returns>
-        public async Task<bool> CheckPasswordAsynch(ApplicationUser user, string password)
+        public async Task<bool> CheckPasswordAsynch(User user, string password)
         {
             try
             {
@@ -55,7 +55,7 @@ namespace Business.Repositories
         /// <param name="user">The user to register.</param>
         /// <param name="password">The password for the user.</param>
         /// <returns>True if registration succeeds; otherwise, false.</returns>
-        public async Task<bool> RegisterUserAsynch(ApplicationUser user, string password)
+        public async Task<bool> RegisterUserAsynch(User user, string password)
         {
             try
             {
@@ -86,7 +86,7 @@ namespace Business.Repositories
         /// <param name="user">The user to sign in.</param>
         /// <param name="password">The password for the user.</param>
         /// <returns>True if sign-in succeeds; otherwise, false.</returns>
-        public async Task<bool> SignInUserAsync(ApplicationUser user, string password)
+        public async Task<bool> SignInUserAsync(User user, string password)
         {
             try
             {
@@ -134,7 +134,7 @@ namespace Business.Repositories
         /// </summary>
         /// <param name="email">The email address of the user.</param>
         /// <returns>The user if found; otherwise, null.</returns>
-        public async Task<ApplicationUser> FindByEmailAsynch(string email)
+        public async Task<User> FindByEmailAsynch(string email)
         {
             try
             {
@@ -157,6 +157,18 @@ namespace Business.Repositories
                 LoggerHelper.LogError(new Exception("An error occurred while finding user by email: " + email, ex));
                 throw;
             }
+        }
+
+        public async Task<List<User>> GetAllUsersAsync()
+        {
+            return await _userManager.Users.ToListAsync();
+        }
+
+        public async Task<List<User>> GetAllUsersBySystemIdAsync(Guid systemId)
+        {
+            return await _userManager.Users
+            .Where(u => u.SystemId == systemId)
+            .ToListAsync();
         }
     }
 }

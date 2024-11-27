@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Core.Logging;
+using Core;
 
 namespace Business.Services
 {
@@ -61,12 +62,12 @@ namespace Business.Services
                     return "Invalid password";
                 }
 
-                var signInResult = await _userRepository.SignInUserAsync(user, loginViewModel.Password);
-                if (!signInResult)
-                {
-                    LoggerHelper.LogInfo("Login failed for user: " + loginViewModel?.Email);
-                    return "Login failed";
-                }
+                //var signInResult = await _userRepository.SignInUserAsync(user, loginViewModel.Password);
+                //if (!signInResult)
+                //{
+                //    LoggerHelper.LogInfo("Login failed for user: " + loginViewModel?.Email);
+                //    return "Login failed";
+                //}
 
                 LoggerHelper.LogInfo("Login successful for user: " + loginViewModel?.Email);
                 return GenerateJwtToken(user);
@@ -78,35 +79,79 @@ namespace Business.Services
             }
         }
 
-        /// <summary>
-        /// Registers a new user and generates a JWT token.
-        /// </summary>
-        /// <param name="registerViewModel">The registration information.</param>
-        /// <returns>A JWT token or an error message.</returns>
-        public async Task<string> RegisterAsync(RegisterViewModel registerViewModel)
+        ///// <summary>
+        ///// Registers a new user and generates a JWT token.
+        ///// </summary>
+        ///// <param name="registerViewModel">The registration information.</param>
+        ///// <returns>A JWT token or an error message.</returns>
+        //public async Task<string> RegisterAsync(RegisterViewModel registerViewModel)
+        //{
+        //    try
+        //    {
+        //        LoggerHelper.LogInfo("Registration attempt for user: " + registerViewModel?.Email);
+
+        //        var user = _mapper.Map<User>(registerViewModel);
+        //        var registrationSuccess = await _userRepository.RegisterUserAsynch(user, registerViewModel.Password);
+
+        //        if (!registrationSuccess)
+        //        {
+        //            LoggerHelper.LogInfo("Registration failed for user: " + registerViewModel?.Email);
+        //            return "Registration failed";
+        //        }
+
+        //        LoggerHelper.LogInfo("Registration successful for user: " + registerViewModel?.Email);
+        //        return GenerateJwtToken(user);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        LoggerHelper.LogError(new Exception("An error occurred during registration for user: " + registerViewModel?.Email, ex));
+        //        return "An error occurred during registration. Please try again later.";
+        //    }
+        //}
+
+
+        public async Task<ApiResponse> RegisterAsync(RegisterViewModel registerViewModel)
         {
             try
             {
                 LoggerHelper.LogInfo("Registration attempt for user: " + registerViewModel?.Email);
 
-                var user = _mapper.Map<ApplicationUser>(registerViewModel);
+                var user = _mapper.Map<User>(registerViewModel);
                 var registrationSuccess = await _userRepository.RegisterUserAsynch(user, registerViewModel.Password);
 
                 if (!registrationSuccess)
                 {
                     LoggerHelper.LogInfo("Registration failed for user: " + registerViewModel?.Email);
-                    return "Registration failed";
+                    return new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Registration failed",
+                        StatusCode = CustomStatusCode.BadRequest 
+                    };
                 }
 
                 LoggerHelper.LogInfo("Registration successful for user: " + registerViewModel?.Email);
-                return GenerateJwtToken(user);
+                return new ApiResponse
+                {
+                    Success = true,
+                    Message = "Registration successful",
+                    StatusCode = CustomStatusCode.Success
+                };
             }
             catch (Exception ex)
             {
                 LoggerHelper.LogError(new Exception("An error occurred during registration for user: " + registerViewModel?.Email, ex));
-                return "An error occurred during registration. Please try again later.";
+                return new ApiResponse
+                {
+                    Success = false,
+                    Message = "An error occurred during registration. Please try again later.",
+                    StatusCode = CustomStatusCode.InternalServerError
+                };
             }
         }
+
+
+
 
         /// <summary>
         /// Logs out the currently authenticated user.
@@ -122,7 +167,7 @@ namespace Business.Services
             catch (Exception ex)
             {
                 LoggerHelper.LogError(new Exception("An error occurred during logout.", ex));
-                throw; // Re-throw the exception for higher-level handling if needed
+                throw;
             }
         }
 
@@ -131,7 +176,7 @@ namespace Business.Services
         /// </summary>
         /// <param name="user">The user for whom the token is generated.</param>
         /// <returns>A JWT token.</returns>
-        private string GenerateJwtToken(ApplicationUser user)
+        private string GenerateJwtToken(User user)
         {
             try
             {
@@ -140,18 +185,35 @@ namespace Business.Services
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
+              //  var defaultAction = "Read , Create, Delete , update"; 
+             //   var defaultView = "User Dashboard";
+                var metersActionPermissions = "Read , Create , Delete , Update";
+                var metersViewPermissions = "AllMeters";
+
+
+                var userPortalAction = "Read , Create , Delete , Update";
+                var userPortalView = "UserDashboard";
+
                 var claims = new[]
                 {
                     new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name, user.UserName),
+                   // new Claim("Action", defaultAction), 
+                  //  new Claim("View", defaultView),
+                    new Claim("MetersAction",metersActionPermissions),
+                     new Claim("UserPortalAction",userPortalAction),
+                     new Claim("MetersView",metersViewPermissions),
+                     new Claim("UserPortalView",userPortalView)
+
+
                 };
 
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.AddHours(1),
+                    Expires = DateTime.UtcNow.AddHours(24),
                     Issuer = _configuration["Jwt:Issuer"],
                     Audience = _configuration["Jwt:Audience"],
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -168,6 +230,17 @@ namespace Business.Services
                 LoggerHelper.LogError(new Exception("An error occurred during token generation for user: " + user?.Email, ex));
                 throw;
             }
+        }
+
+        public async Task<List<User>> GetAllUsersAsync()
+        {
+            return await _userRepository.GetAllUsersAsync();
+        }
+
+      
+        public async Task<List<User>> GetAllUsersBySystemIdAsync(Guid systemId)
+        {
+            return await _userRepository.GetAllUsersBySystemIdAsync(systemId);
         }
     }
 }
