@@ -57,7 +57,7 @@ namespace WebApi.Controllers
                 }
 
                 LoggerHelper.LogInfo("Login successful for user: " + loginViewModel?.Email);
-                return Ok(new { Token = token });
+                return Ok(new { Token = token, User = new { name = "" } });
             }
             catch (Exception ex)
             {

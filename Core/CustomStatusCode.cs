@@ -8,11 +8,11 @@ namespace Core
 {
     public enum CustomStatusCode
     {
-        Success = 1,
-        BadRequest = 2,
+        Success =200,
+        BadRequest = 400,
         Unauthorized = 3,
-        NotFound = 4,
-        InternalServerError = 5
+        NotFound = 401,
+        InternalServerError = 500
        
     }
 }

@@ -2,6 +2,7 @@
 using AutoMapper;
 using Core.Logging;
 using Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,19 +26,34 @@ namespace UserModule
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+          //  builder.Services.AddDbContext<ApplicationDbContext>(options =>
+          // options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-           options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            {
+                if (builder.Environment.IsEnvironment("Test"))
+                {
+                    options.UseInMemoryDatabase("TestDb");
+                }
+                else
+                {
+                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                }
+            });
 
             builder.Services.AddIdentity<User, IdentityRole<Guid>>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+            
+
 
             builder.Services.AddApplicationServices();
 
             var jwtSettings = builder.Configuration.GetSection("Jwt");
             var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
-            // Configure JWT authentication
+            
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -76,11 +92,22 @@ namespace UserModule
             builder.Services.AddSingleton<Core.Logging.ILogger>(provider =>
              new Logger(LoggingDestination.Seq));
 
+            //builder.Services.AddControllers();
+            //builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            //    options.UseInMemoryDatabase("TestDb"));
+            //builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+            //    .AddEntityFrameworkStores<ApplicationDbContext>()
+            //    .AddDefaultTokenProviders();
+            //builder.Services.AddDistributedMemoryCache();
+
+           
+
+
             var app = builder.Build();
             var logger = app.Services.GetRequiredService<Core.Logging.ILogger>();
             LoggerHelper.Initialize(logger);
 
-            // Configure the HTTP request pipeline.
+            
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -90,6 +117,7 @@ namespace UserModule
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
+            
 
 
             app.MapControllers();

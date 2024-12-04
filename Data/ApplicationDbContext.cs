@@ -18,7 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<SystemModule> Systems { get; set; }
     public DbSet<View> Views { get; set; }
-    public DbSet<Data.Action> Actions { get; set; }
+    public  DbSet<Data.Action> Actions { get; set; }
     public DbSet<GroupPermission> GroupPermissions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)

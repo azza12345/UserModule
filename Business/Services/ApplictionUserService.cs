@@ -37,6 +37,8 @@ namespace Business.Services
             _configuration = configuration;
         }
 
+
+
         /// <summary>
         /// Logs in a user by verifying credentials and generating a JWT token.
         /// </summary>
@@ -62,15 +64,11 @@ namespace Business.Services
                     return "Invalid password";
                 }
 
-                //var signInResult = await _userRepository.SignInUserAsync(user, loginViewModel.Password);
-                //if (!signInResult)
-                //{
-                //    LoggerHelper.LogInfo("Login failed for user: " + loginViewModel?.Email);
-                //    return "Login failed";
-                //}
+
 
                 LoggerHelper.LogInfo("Login successful for user: " + loginViewModel?.Email);
-                return GenerateJwtToken(user);
+                 return GenerateJwtToken(user);
+                
             }
             catch (Exception ex)
             {
@@ -176,6 +174,62 @@ namespace Business.Services
         /// </summary>
         /// <param name="user">The user for whom the token is generated.</param>
         /// <returns>A JWT token.</returns>
+        //private string GenerateJwtToken(User user)
+        //{
+        //    try
+        //    {
+        //        LoggerHelper.LogInfo("Token generation initiated for user: " + user?.Email);
+
+        //        var tokenHandler = new JwtSecurityTokenHandler();
+        //        var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+        //      //  var defaultAction = "Read , Create, Delete , update"; 
+        //     //   var defaultView = "User Dashboard";
+        //        var metersActionPermissions = "Read , Create , Delete , Update";
+        //        var metersViewPermissions = "AllMeters";
+
+
+        //        var userPortalAction = "Read , Create , Delete , Update";
+        //        var userPortalView = "UserDashboard";
+
+        //        var claims = new[]
+        //        {
+        //            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+        //            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        //            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        //            new Claim(ClaimTypes.Name, user.UserName),
+        //           // new Claim("Action", defaultAction), 
+        //          //  new Claim("View", defaultView),
+        //            new Claim("MetersAction",metersActionPermissions),
+        //             new Claim("UserPortalAction",userPortalAction),
+        //             new Claim("MetersView",metersViewPermissions),
+        //             new Claim("UserPortalView",userPortalView)
+
+
+        //        };
+
+        //        var tokenDescriptor = new SecurityTokenDescriptor
+        //        {
+        //            Subject = new ClaimsIdentity(claims),
+        //            Expires = DateTime.UtcNow.AddHours(24),
+        //            Issuer = _configuration["Jwt:Issuer"],
+        //            Audience = _configuration["Jwt:Audience"],
+        //            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        //        };
+
+        //        var token = tokenHandler.CreateToken(tokenDescriptor);
+        //        var tokenString = tokenHandler.WriteToken(token);
+
+        //        LoggerHelper.LogInfo("Token generation successful for user: " + user?.Email);
+        //        return tokenString;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        LoggerHelper.LogError(new Exception("An error occurred during token generation for user: " + user?.Email, ex));
+        //        throw;
+        //    }
+        //}
+
         private string GenerateJwtToken(User user)
         {
             try
@@ -183,33 +237,41 @@ namespace Business.Services
                 LoggerHelper.LogInfo("Token generation initiated for user: " + user?.Email);
 
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
-
-              //  var defaultAction = "Read , Create, Delete , update"; 
-             //   var defaultView = "User Dashboard";
-                var metersActionPermissions = "Read , Create , Delete , Update";
-                var metersViewPermissions = "AllMeters";
+              //  var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+                var key = Convert.FromBase64String(_configuration["Jwt:Key"]);
 
 
-                var userPortalAction = "Read , Create , Delete , Update";
-                var userPortalView = "UserDashboard";
+                // Prepare Claims
+                var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName),
+        };
 
-                var claims = new[]
+                
+                var permissions = new Dictionary<string, HashSet<string>>
+        {
+            {"Meters", new HashSet<string> {"Read", "Create", "Delete", "Update"}},
+            {"UserPortal", new HashSet<string> {"Read", "Create", "Delete", "Update"}},
+            
+        };
+
+                
+                foreach (var view in permissions)
                 {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.UserName),
-                   // new Claim("Action", defaultAction), 
-                  //  new Claim("View", defaultView),
-                    new Claim("MetersAction",metersActionPermissions),
-                     new Claim("UserPortalAction",userPortalAction),
-                     new Claim("MetersView",metersViewPermissions),
-                     new Claim("UserPortalView",userPortalView)
+                    var permissionClaim = new Claim(view.Key + "_View", string.Join(", ", view.Value));
+                    claims.Add(permissionClaim);
 
+                    foreach (var action in view.Value)
+                    {
+                        var actionClaim = new Claim(view.Key + "_" + action, action);
+                        claims.Add(actionClaim);
+                    }
+                }
 
-                };
-
+                
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(claims),
@@ -220,6 +282,7 @@ namespace Business.Services
                 };
 
                 var token = tokenHandler.CreateToken(tokenDescriptor);
+
                 var tokenString = tokenHandler.WriteToken(token);
 
                 LoggerHelper.LogInfo("Token generation successful for user: " + user?.Email);
@@ -227,10 +290,12 @@ namespace Business.Services
             }
             catch (Exception ex)
             {
-                LoggerHelper.LogError(new Exception("An error occurred during token generation for user: " + user?.Email, ex));
+                LoggerHelper.LogError(new Exception($"An error occurred during token generation for user: {user?.Email}", ex));
                 throw;
             }
         }
+
+
 
         public async Task<List<User>> GetAllUsersAsync()
         {
