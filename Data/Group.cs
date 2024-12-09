@@ -25,6 +25,7 @@ namespace Data
 
         public ICollection<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
         public ICollection<GroupPermission> GroupPermissions { get; set; } = new List<GroupPermission>();
+        
 
     }
 

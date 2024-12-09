@@ -29,6 +29,8 @@ public class MappingProfile : Profile
                .ForMember(dest => dest.Id, opt => opt.Ignore());
 
         CreateMap<GroupPermissionViewModel, GroupPermission>();
+        CreateMap<ViewViewModel, View>();
+
 
     }
 }

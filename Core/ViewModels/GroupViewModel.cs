@@ -17,6 +17,8 @@ namespace Core.ViewModels
         public bool IsActive { get; set; }
         public Guid? ParentGroupId { get; set; } 
         public Guid? SystemId { get; set; }
+        public List<GroupPermissionViewModel> Permissions { get; set; } = new List<GroupPermissionViewModel>();
     }
-
 }
+
+

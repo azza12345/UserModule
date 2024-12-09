@@ -1,19 +1,12 @@
-﻿
-using Core;
+﻿ using Core;
 using Core.ViewModels;
-using Data;
 using IdentityModel.Client;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Json;
 using System.Text;
-using System.Threading.Tasks;
 using UserModule;
 
 namespace UserIntegrationTests
@@ -21,12 +14,12 @@ namespace UserIntegrationTests
     public class IntegrationTestAuth : IClassFixture<WebApplicationFactory<Program>>
     {
         private readonly WebApplicationFactory<Program> _factory;
-        //  private readonly ApplicationDbContext _context;
+         //private readonly ApplicationDbContext _context;
         //private readonly HttpClient _client;
         public IntegrationTestAuth(WebApplicationFactory<Program> factoryServer)
         {
-            //  _factory = factoryServer;
-            //  var scope = _factory.Services.CreateScope();
+              //  _factory = factoryServer;
+             //  var scope = _factory.Services.CreateScope();
             //   _context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             _factory = factoryServer.WithWebHostBuilder(builder =>
             {
@@ -63,7 +56,7 @@ namespace UserIntegrationTests
                 Email = "test2@test.com",
                 Fname = "Azza",
                 Lname = "Mohamed",
-                Password = "Password@12345",
+                Password ="Password@12345",
                 Mobile = "01234567890",
                 Address = "6th October",
                 SystemId = systemId
@@ -95,17 +88,8 @@ namespace UserIntegrationTests
             var _client = _factory.CreateClient();
             using var scope = _factory.Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-
             var systemId = Guid.Parse("0062ce9c-c0ed-4769-97c0-be77c52275bb");
-            //dbContext.Users.Add(new User
-            //{
-            //    Email = "test@test.com",
-            //    PasswordHash = "Password@12345"
-
-            //});
-
-            //await dbContext.SaveChangesAsync();
+           
 
             var loginModel = new LoginViewModel
             {
@@ -127,9 +111,9 @@ namespace UserIntegrationTests
 
             Assert.NotNull(token);
 
-            // //to remove only the user i created for test register or i can use inmemory database 
-            //    var testUsers = _context.Users.Where(u => u.Email.StartsWith("test"));
-            // _context.Users.RemoveRange(testUsers);
+             //to remove only the user i created for test register or i can use inmemory database 
+            //var testUsers = _context.Users.Where(u => u.Email.StartsWith("test"));
+           //_context.Users.RemoveRange(testUsers);
 
             //// _context.Users.RemoveRange(_context.Users);
             //  _context.SaveChanges();

@@ -29,6 +29,11 @@ namespace UserModule
             services.AddScoped<IGroupPermissionRepository, GroupPermissionRepository>();
             services.AddScoped<IGroupPermissionService, GroupPermissionService>();
 
+            services.AddScoped<IViewRepository, ViewRepository>();
+            services.AddScoped<IViewService, ViewService>();
+
+
+
 
 
 

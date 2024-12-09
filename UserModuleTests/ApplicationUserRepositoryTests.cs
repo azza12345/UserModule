@@ -7,82 +7,84 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-
-public class ApplicationUserRepositoryTests
+namespace UserModuleTests
 {
-    private readonly Mock<UserManager<User>> _mockUserManager;
-    private readonly Mock<SignInManager<User>> _mockSignInManager;
-    private readonly ApplicationUserRepository _repository;
-
-    public ApplicationUserRepositoryTests()
+    public class ApplicationUserRepositoryTests
     {
-        // Mock UserManager
-        _mockUserManager = new Mock<UserManager<User>>(
-            Mock.Of<IUserStore<User>>(),
-            null, null, null, null, null, null, null, null);
+        private readonly Mock<UserManager<User>> _mockUserManager;
+        private readonly Mock<SignInManager<User>> _mockSignInManager;
+        private readonly ApplicationUserRepository _repository;
 
-        // Mock SignInManager
-        var httpContextAccessor = new Mock<IHttpContextAccessor>();
-        var userClaimsPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<User>>();
-        var options = new Mock<IOptions<IdentityOptions>>();
-        options.Setup(o => o.Value).Returns(new IdentityOptions());
-        var logger = new Mock<ILogger<SignInManager<User>>>();
-        var schemeProvider = new Mock<IAuthenticationSchemeProvider>();
-        var userConfirmation = new Mock<IUserConfirmation<User>>();
+        public ApplicationUserRepositoryTests()
+        {
+            // Mock UserManager
+            _mockUserManager = new Mock<UserManager<User>>(
+                Mock.Of<IUserStore<User>>(),
+                null, null, null, null, null, null, null, null);
 
-        _mockSignInManager = new Mock<SignInManager<User>>(
-            _mockUserManager.Object,
-            httpContextAccessor.Object,
-            userClaimsPrincipalFactory.Object,
-            options.Object,
-            logger.Object,
-            schemeProvider.Object,
-            userConfirmation.Object);
+            // Mock SignInManager
+            var httpContextAccessor = new Mock<IHttpContextAccessor>();
+            var userClaimsPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<User>>();
+            var options = new Mock<IOptions<IdentityOptions>>();
+            options.Setup(o => o.Value).Returns(new IdentityOptions());
+            var logger = new Mock<ILogger<SignInManager<User>>>();
+            var schemeProvider = new Mock<IAuthenticationSchemeProvider>();
+            var userConfirmation = new Mock<IUserConfirmation<User>>();
+
+            _mockSignInManager = new Mock<SignInManager<User>>(
+                _mockUserManager.Object,
+                httpContextAccessor.Object,
+                userClaimsPrincipalFactory.Object,
+                options.Object,
+                logger.Object,
+                schemeProvider.Object,
+                userConfirmation.Object);
 
 
-        var mockLogger = new Mock<Core.Logging.ILogger>();
-        LoggerHelper.Initialize(mockLogger.Object); 
+            var mockLogger = new Mock<Core.Logging.ILogger>();
+            LoggerHelper.Initialize(mockLogger.Object);
 
 
-       
-        _repository = new ApplicationUserRepository(_mockUserManager.Object, _mockSignInManager.Object);
-    }
 
-    [Fact]
-    public async Task RegisterUserAsynch_ShouldReturnTrue_WhenRegistrationIsSuccessful()
-    {
-        // Arrange
-        var user = new User { Email = "azza5@gmail.com" };
-        var password = "ValidPassword";
+            _repository = new ApplicationUserRepository(_mockUserManager.Object, _mockSignInManager.Object);
+        }
 
-        // Mock UserManager to return success
-        _mockUserManager.Setup(um => um.CreateAsync(user, password))
-            .ReturnsAsync(IdentityResult.Success);
+        [Fact]
+        public async Task RegisterUserAsynch_ShouldReturnTrue_WhenRegistrationIsSuccessful()
+        {
+            // Arrange
+            var user = new User { Email = "azza5@gmail.com" };
+            var password = "ValidPassword";
 
-        // Act
-        var result = await _repository.RegisterUserAsynch(user, password);
+            // Mock UserManager to return success
+            _mockUserManager.Setup(um => um.CreateAsync(user, password))
+                .ReturnsAsync(IdentityResult.Success);
 
-        // Assert
-        Assert.True(result);
-        _mockUserManager.Verify(um => um.CreateAsync(user, password), Times.Once);
-    }
+            // Act
+            var result = await _repository.RegisterUserAsynch(user, password);
 
-    [Fact]
-    public async Task RegisterUserAsynch_ShouldReturnFalse_WhenRegistrationFails()
-    {
-        // Arrange
-        var user = new User { Email = "azza5@gmail.com" };
-        var password = "WeakPassword";
+            // Assert
+            Assert.True(result);
+            _mockUserManager.Verify(um => um.CreateAsync(user, password), Times.Once);
+        }
 
-        // Mock UserManager to return failure
-        _mockUserManager.Setup(um => um.CreateAsync(user, password))
-            .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Password too weak" }));
+        [Fact]
+        public async Task RegisterUserAsynch_ShouldReturnFalse_WhenRegistrationFails()
+        {
+            // Arrange
+            var user = new User { Email = "azza5@gmail.com" };
+            var password = "WeakPassword";
 
-        // Act
-        var result = await _repository.RegisterUserAsynch(user, password);
+            // Mock UserManager to return failure
+            _mockUserManager.Setup(um => um.CreateAsync(user, password))
+                .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "Password too weak" }));
 
-        // Assert
-        Assert.False(result);
-        _mockUserManager.Verify(um => um.CreateAsync(user, password), Times.Once);
+            // Act
+            var result = await _repository.RegisterUserAsynch(user, password);
+
+            // Assert
+            Assert.False(result);
+            _mockUserManager.Verify(um => um.CreateAsync(user, password), Times.Once);
+        }
     }
 }
